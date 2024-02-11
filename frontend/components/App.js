@@ -19,11 +19,12 @@ export default function App() {
   const [articles, setArticles] = useState([])
   const [currentArticleId, setCurrentArticleId] = useState()
   const [spinnerOn, setSpinnerOn] = useState(false)
+  const [username, setUsername] = useState('');
 
   // ✨ Research `useNavigate` in React Router v.6
   const navigate = useNavigate()
   const redirectToLogin = () => navigate("/");
-const redirectToArticles = () => navigate("/articles");
+const redirectToArticles = () => navigate("/Articles");
 
   
   const logout = () => {
@@ -32,69 +33,89 @@ const redirectToArticles = () => navigate("/articles");
     redirectToLogin();
   };
   
-
   const login = async ({ username, password }) => {
-    setMessage('');
-    setSpinnerOn(true);
+    setMessage(''); // Reset any previous message
+    setSpinnerOn(true); // Show a spinner or loading indicator
     try {
       const response = await axios.post(loginUrl, { username, password });
       localStorage.setItem('token', response.data.token);
-      setMessage(response.data.message);
+      setUsername(username);
+      // Set a personalized welcome message that includes the user's name
+      const welcomeMessage = `Welcome back, ${username}!`; // Adjusted to include username
+      setMessage(welcomeMessage);
+      
+      // Assuming this function sets the expected success message for articles fetching
+      // or navigates the user to a page where this message is displayed.
       redirectToArticles();
     } catch (error) {
+      // If login fails, display an error message to the user
       setMessage('Login failed: ' + error.message);
     } finally {
-      setSpinnerOn(false);
+      setSpinnerOn(false); // Hide the spinner or loading indicator
     }
   };
+  
   
   
 
   const getArticles = async () => {
-    setMessage('');
-    setSpinnerOn(true);
-    try {
-      const response = await axiosWithAuth().get(articlesUrl);
-      setArticles(response.data.articles);
-      setMessage('Articles fetched successfully');
-    } catch (error) {
-      if (error.response && error.response.status === 401) {
-        redirectToLogin();
-      } else {
-        setMessage('Failed to fetch articles: ' + error.message);
-      }
-    } finally {
-      setSpinnerOn(false);
+  setMessage('');
+  setSpinnerOn(true);
+  try {
+    const response = await axiosWithAuth().get(articlesUrl);
+    setArticles(response.data.articles);
+    // Assuming 'username' is available in the scope or from state/context
+    setMessage(`Here are your articles, ${username}!`);
+  } catch (error) {
+    if (error.response && error.response.status === 401) {
+      redirectToLogin();
+    } else {
+      setMessage('Failed to fetch articles: ' + error.message);
     }
-  };
+  } finally {
+    setSpinnerOn(false);
+  }
+};
+
   
   
 
-  const postArticle = async (article) => {
-    setMessage('');
-    setSpinnerOn(true);
-    try {
-      const response = await axiosWithAuth().post(articlesUrl, article);
-      await getArticles(); // Refresh articles list
-      setMessage(response.data.message || 'Article added successfully!');
-    } catch (error) {
-      setMessage('Failed to post article: ' + error.message);
-    } finally {
-      setSpinnerOn(false); // This is correctly placed and will always execute
-    }
-  };
+const postArticle = async (article) => {
+  setMessage('');
+  setSpinnerOn(true);
+  try {
+    const response = await axiosWithAuth().post(articlesUrl, article);
+    setArticles(prevArticles => [...prevArticles, response.data.newArticle]);
+    // Make sure you have the `username` variable available in this scope
+    setMessage(`Well done, ${username}, Great article!`);
+  } catch (error) {
+    setMessage('Failed to post article: ' + error.message);
+  } finally {
+    setSpinnerOn(false);
+  }
+};
+
+  
   
 
-  const updateArticle = async ({ article_id, article }) => {
-    try {
-      const response = await axios.put(`http://localhost:9000/api/articles/${article_id}`, article);
-      console.log('Article updated:', response.data);
-      // Update your application state as needed
-    } catch (error) {
-      console.error('Error updating article:', error);
-      // Handle error appropriately
-    }
-  };
+const updateArticle = async ({ article_id, article }) => {
+  setMessage('');
+  setSpinnerOn(true);
+  const username = localStorage.getItem('username');
+  try {
+    const response = await axiosWithAuth().put(`${articlesUrl}/:${article_id}`, article);
+    const updatedArticles = articles.map(art => art.article_id === article_id ? response.data.updatedArticle : art);
+    setArticles(updatedArticles);
+    // Make sure the variable `username` is defined and accessible in this scope
+    setMessage(`Nice update, ${username}!`);
+  } catch (error) {
+    setMessage(`Error updating article: ${error.message}`);
+  } finally {
+    setSpinnerOn(false);
+  }
+};
+
+  
   
   
   
@@ -104,18 +125,19 @@ const redirectToArticles = () => navigate("/articles");
     setMessage('');
     setSpinnerOn(true);
     try {
-      const response = await axiosWithAuth().delete(`${articlesUrl}/${article_id}`);
-      await getArticles(); // Refresh articles list
-      setMessage(response.data.message || 'Article deleted successfully!');
+      await axiosWithAuth().delete(`${articlesUrl}/${article_id}`);
+      setArticles(prevArticles => prevArticles.filter(article => article.article_id !== article_id));
+      setMessage(`Article ${article_id} was deleted, Foo!!`); // Corrected line
     } catch (error) {
-      setMessage('Failed to delete article: ' + error.message);
+      setMessage(`Failed to delete article: ${error.message}`);
     } finally {
       setSpinnerOn(false);
     }
   };
   
   
-
+  
+  const currentArticle = currentArticleId != null ? articles.find(article => article.article_id === currentArticleId) : null;
   return (
     // ✨ fix the JSX: `Spinner`, `Message`, `LoginForm`, `ArticleForm` and `Articles` expect props ❗
     <>
@@ -135,15 +157,14 @@ const redirectToArticles = () => navigate("/articles");
             <ArticleForm 
               postArticle={postArticle} 
               updateArticle={updateArticle}
-              currentArticleId={currentArticleId}
               setCurrentArticleId={setCurrentArticleId}
+              currentArticle={currentArticle} // Pass the found currentArticle
             />
             <Articles 
               articles={articles} 
               getArticles={getArticles}
               deleteArticle={deleteArticle}
               setCurrentArticleId={setCurrentArticleId}
-              currentArticleId={currentArticleId}
             />
           </>
         } />

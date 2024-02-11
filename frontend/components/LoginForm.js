@@ -15,10 +15,17 @@ export default function LoginForm(props) {
     setValues({ ...values, [id]: value });
   };
 
-  const onSubmit = evt => {
+  const onSubmit = async (evt) => {
     evt.preventDefault();
-    login(values); // Call the login function with username and password
+    try {
+      await login(values); // Call the login function with username and password
+      // Optional: Handle additional actions after successful login, if needed.
+    } catch (error) {
+      // Error handling if the login function throws an error
+      // You might not need this catch block if the login function itself handles all errors
+    }
   };
+  
 
   const isDisabled = () => {
     // Check if username or password doesn't meet the required length

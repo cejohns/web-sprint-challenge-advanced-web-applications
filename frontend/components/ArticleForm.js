@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import PT from 'prop-types';
 
-
 const initialFormValues = { title: '', text: '', topic: '' };
 
 export default function ArticleForm(props) {
   const [values, setValues] = useState(initialFormValues);
   const [successMessage, setSuccessMessage] = useState('');
+  const [errors, setErrors] = useState({});
   const { postArticle, updateArticle, setCurrentArticleId, currentArticle } = props;
 
   useEffect(() => {
@@ -26,13 +26,26 @@ export default function ArticleForm(props) {
     setValues({ ...values, [name]: value });
   };
 
+  const validateForm = () => {
+    const errors = {};
+    if (!values.title.trim()) errors.title = 'Title is required.';
+    if (!values.text.trim()) errors.text = 'Text is required.';
+    if (!values.topic) errors.topic = 'Please select a topic.';
+    return errors;
+  };
+
   const onSubmit = async evt => {
     evt.preventDefault();
+    const formErrors = validateForm();
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
+      return; // Stop the form submission if validation fails
+    }
+    
+    setErrors({}); // Clear previous errors
     if (currentArticle) {
-      // Assuming updateArticle is correctly implemented to make a PUT request
       await updateArticle({ article_id: currentArticle.article_id, article: values });
     } else {
-      // Assuming postArticle is correctly implemented to make a POST request
       await postArticle(values);
     }
     setSuccessMessage('Article successfully submitted!');
@@ -47,6 +60,7 @@ export default function ArticleForm(props) {
   const cancelEdit = () => {
     setCurrentArticleId(null); // Reset current editing state
     setValues(initialFormValues); // Reset form values
+    setErrors({}); // Clear any validation errors
   };
 
   return (
@@ -58,21 +72,24 @@ export default function ArticleForm(props) {
         onChange={onChange}
         value={values.title}
         placeholder="Enter title"
-        name="title" // Changed from id to name for binding
+        name="title"
       />
+      {errors.title && <div className="error-message">{errors.title}</div>}
       <textarea
         maxLength={200}
         onChange={onChange}
         value={values.text}
         placeholder="Enter text"
-        name="text" // Changed from id to name for binding
+        name="text"
       />
+      {errors.text && <div className="error-message">{errors.text}</div>}
       <select onChange={onChange} name="topic" value={values.topic}>
         <option value="">-- Select topic --</option>
         <option value="JavaScript">JavaScript</option>
         <option value="React">React</option>
         <option value="Node">Node</option>
       </select>
+      {errors.topic && <div className="error-message">{errors.topic}</div>}
       <div className="button-group">
         <button disabled={isDisabled()} id="submitArticle">Submit</button>
         {currentArticle && <button type="button" onClick={cancelEdit}>Cancel edit</button>}
@@ -90,5 +107,5 @@ ArticleForm.propTypes = {
     title: PT.string.isRequired,
     text: PT.string.isRequired,
     topic: PT.string.isRequired,
-  })
+  }),
 };

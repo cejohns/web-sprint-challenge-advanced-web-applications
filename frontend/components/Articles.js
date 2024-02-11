@@ -4,12 +4,14 @@ import PT from 'prop-types';
 
 export default function Articles({ articles, getArticles, deleteArticle, setCurrentArticleId, currentArticleId }) {
   useEffect(() => {
-    getArticles(); // Fetch articles on first render
-  }, [getArticles]); // Dependency array with getArticles to avoid unnecessary re-fetches
+    getArticles(); // Call this function to fetch articles when the component mounts
+  }, []);
 
   if (!localStorage.getItem('token')) {
     return <Navigate to="/" />; // Redirect to login if no token found
   }
+
+  console.log(articles); // For debugging purposes
 
   return (
     <div className="articles">
@@ -17,28 +19,30 @@ export default function Articles({ articles, getArticles, deleteArticle, setCurr
       {
         articles.length === 0
           ? 'No articles yet'
-          : articles.map(art => {
-              return (
-                <div className="article" key={art.article_id}>
-      <div>
-        <h3>{art.title}</h3>
-        <p>{art.text}</p>
-        <p>Topic: {art.topic}</p>
-      </div>
-      <div>
-        <button 
-          onClick={() => setCurrentArticleId(art.article_id)}
-          disabled={currentArticleId === art.article_id} // Disable if this is the current article being edited
-        >
-          Edit
-        </button>
-        <button onClick={() => deleteArticle(art.article_id)}>
-          Delete
-        </button>
-      </div>
-    </div>
-              )
-            })
+          : articles.filter(art => art != null && art.article_id != null)
+          // Remove any nullish articles
+              .map(art => {
+                return (
+                  <div className="article" key={art?.article_id}>
+                    <div>
+                      <h3>{art?.title}</h3>
+                      <p>{art?.text}</p>
+                      <p>Topic: {art?.topic}</p>
+                    </div>
+                    <div>
+                      <button 
+                        onClick={() => setCurrentArticleId(art.article_id)}
+                        disabled={currentArticleId === art.article_id} // Disable if this is the current article being edited
+                      >
+                        Edit
+                      </button>
+                      <button onClick={() => deleteArticle(art.article_id)}>
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                )
+              })
       }
     </div>
   );
