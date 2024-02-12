@@ -1,24 +1,17 @@
-// Import React since JSX is used.
 import React from 'react';
-// Import render function and screen object from the testing library.
 import { render, screen } from '@testing-library/react';
-// Import the Spinner component to be tested.
-import Spinner from './Spinner';
+import Spinner from './Spinner'; // Adjust the import path as necessary
 
-// Test case for when the spinner should be visible.
-test('renders Spinner when on is true', () => {
-  // Render the Spinner component with the prop `on` set to true.
-  render(<Spinner on={true} />);
+describe('Spinner Component', () => {
+  test('renders spinner when "on" prop is true', () => {
+    render(<Spinner on={true} />);
+    const spinnerElement = screen.getByTestId('spinner'); // We'll need to adjust the Spinner component to include 'data-testid' attribute
+    expect(spinnerElement).toBeInTheDocument();
+  });
 
-  // Assert that an element with the test ID 'spinner' is present in the document.
-  expect(screen.getByTestId('spinner')).toBeInTheDocument();
-});
-
-// Test case for when the spinner should not be visible.
-test('does not render Spinner when on is false', () => {
-  // Render the Spinner component with the prop `on` set to false.
-  render(<Spinner on={false} />);
-
-  // Assert that no elements with the test ID 'spinner' are present in the document.
-  expect(screen.queryByTestId('spinner')).not.toBeInTheDocument();
+  test('does not render spinner when "on" prop is false', () => {
+    render(<Spinner on={false} />);
+    const spinnerElement = screen.queryByTestId('spinner');
+    expect(spinnerElement).not.toBeInTheDocument();
+  });
 });
