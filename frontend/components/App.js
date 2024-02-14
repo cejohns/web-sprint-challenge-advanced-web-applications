@@ -17,6 +17,7 @@ export default function App() {
   // ✨ MVP can be achieved with these states
   const [message, setMessage] = useState('')
   const [articles, setArticles] = useState([])
+ // const [articleForm, setArticleForm] = useState({ title: '', content: '' }); // State for the article form inputs
   const [currentArticleId, setCurrentArticleId] = useState()
   const [spinnerOn, setSpinnerOn] = useState(false)
   const [username, setUsername] = useState('');
@@ -85,15 +86,19 @@ const postArticle = async (article) => {
   setSpinnerOn(true);
   try {
     const response = await axiosWithAuth().post(articlesUrl, article);
-    setArticles(prevArticles => [...prevArticles, response.data.newArticle]);
-    // Make sure you have the `username` variable available in this scope
+    setArticles(prevArticles => {return prevArticles.concat(response.data.article)});
+    // Use the `username` state variable directly
     setMessage(`Well done, ${username}, Great article!`);
+    // Reset the article form upon successful submission
+    //setArticleForm({ title: '', content: '' });
   } catch (error) {
     setMessage('Failed to post article: ' + error.message);
   } finally {
     setSpinnerOn(false);
   }
 };
+
+
 
   
   

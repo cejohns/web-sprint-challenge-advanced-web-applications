@@ -7,6 +7,7 @@ export default function ArticleForm(props) {
   const [values, setValues] = useState(initialFormValues);
   const [successMessage, setSuccessMessage] = useState('');
   const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false); // Loading state
   const { postArticle, updateArticle, setCurrentArticleId, currentArticle } = props;
 
   useEffect(() => {
@@ -22,8 +23,8 @@ export default function ArticleForm(props) {
   }, [currentArticle]);
 
   const onChange = evt => {
-    const { name, value } = evt.target;
-    setValues({ ...values, [name]: value });
+    const { id, value } = evt.target;
+    setValues({ ...values, [id]: value });
   };
 
   const validateForm = () => {
@@ -36,38 +37,48 @@ export default function ArticleForm(props) {
 
   const onSubmit = async evt => {
     evt.preventDefault();
+    setIsLoading(true); // Enable loading state
     const formErrors = validateForm();
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors);
-      return; // Stop the form submission if validation fails
+      setIsLoading(false); // Disable loading state if validation fails
+      return;
     }
     
-    setErrors({}); // Clear previous errors
-    if (currentArticle) {
-      await updateArticle({ article_id: currentArticle.article_id, article: values });
-    } else {
-      await postArticle(values);
+    try {
+      if (currentArticle) {
+        await updateArticle({ article_id: currentArticle.article_id, article: values });
+      } else {
+        await postArticle(values);
+      }
+      setCurrentArticleId(); 
+      setSuccessMessage("Article successfully submitted!");
+      setValues(initialFormValues); // Reset form values after submission
+      setTimeout(() => setSuccessMessage(''), 3000); // Clear success message after 3 seconds
+    } catch (error) {
+      setErrors({...errors, submit: error.message}); // Handle potential server-side errors
+    } finally {
+      setIsLoading(false); // Disable loading state
     }
-    setSuccessMessage('Article successfully submitted!');
-    setValues(initialFormValues); // Reset form values after submission
-    setTimeout(() => setSuccessMessage(''), 3000); // Clear success message after 3 seconds
   };
 
   const isDisabled = () => {
-    return !values.title.trim() || !values.text.trim() || !values.topic;
+    return !values.title.trim() || !values.text.trim() || !values.topic || isLoading;
   };
 
   const cancelEdit = () => {
-    setCurrentArticleId(null); // Reset current editing state
-    setValues(initialFormValues); // Reset form values
-    setErrors({}); // Clear any validation errors
+    setCurrentArticleId(null);
+    setValues(initialFormValues);
+    setErrors({});
   };
 
   return (
     <form id="form" onSubmit={onSubmit}>
       <h2>{currentArticle ? "Edit Article" : "Create Article"}</h2>
       {successMessage && <div className="success-message">{successMessage}</div>}
+      {errors.submit && <div className="error-message">{errors.submit}</div>}
       <input
+        aria-label="Title"
         maxLength={50}
         onChange={onChange}
         value={values.title}
@@ -76,6 +87,7 @@ export default function ArticleForm(props) {
       />
       {errors.title && <div className="error-message">{errors.title}</div>}
       <textarea
+        aria-label="Text"
         maxLength={200}
         onChange={onChange}
         value={values.text}
@@ -83,7 +95,11 @@ export default function ArticleForm(props) {
         name="text"
       />
       {errors.text && <div className="error-message">{errors.text}</div>}
-      <select onChange={onChange} name="topic" value={values.topic}>
+      <select
+        aria-label="Topic"
+        onChange={onChange}
+        name="topic"
+        value={values.topic}>
         <option value="">-- Select topic --</option>
         <option value="JavaScript">JavaScript</option>
         <option value="React">React</option>
@@ -91,8 +107,14 @@ export default function ArticleForm(props) {
       </select>
       {errors.topic && <div className="error-message">{errors.topic}</div>}
       <div className="button-group">
-        <button disabled={isDisabled()} id="submitArticle">Submit</button>
-        {currentArticle && <button type="button" onClick={cancelEdit}>Cancel edit</button>}
+        <button disabled={isDisabled()} id="submitArticle">
+          {isLoading ? "Submitting..." : "Submit"}
+        </button>
+        {currentArticle && (
+          <button type="button" onClick={cancelEdit} disabled={isLoading}>
+            Cancel edit
+          </button>
+        )}
       </div>
     </form>
   );
