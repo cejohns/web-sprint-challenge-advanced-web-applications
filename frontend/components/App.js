@@ -13,6 +13,9 @@ import Spinner from './Spinner';
 const articlesUrl = 'http://localhost:9000/api/articles'
 const loginUrl = 'http://localhost:9000/api/login'
 
+
+const initialFormValues = { title: '', text: '', topic: '' };
+
 export default function App() {
   // ✨ MVP can be achieved with these states
   const [message, setMessage] = useState('')
@@ -87,6 +90,7 @@ const postArticle = async (article) => {
   try {
     const response = await axiosWithAuth().post(articlesUrl, article);
     setArticles(prevArticles => {return prevArticles.concat(response.data.article)});
+    setArticles(initialFormValues); // Make sure initialFormValues is defined as your form's initial state.
     // Use the `username` state variable directly
     setMessage(`Well done, ${username}, Great article!`);
     // Reset the article form upon successful submission
@@ -108,7 +112,7 @@ const updateArticle = async ({ article_id, article }) => {
   setSpinnerOn(true);
   const username = localStorage.getItem('username');
   try {
-    const response = await axiosWithAuth().put(`${articlesUrl}/:${article_id}`, article);
+    const response = await axiosWithAuth().put(`${articlesUrl}/${article_id}`, article);
     const updatedArticles = articles.map(art => art.article_id === article_id ? response.data.updatedArticle : art);
     setArticles(updatedArticles);
     // Make sure the variable `username` is defined and accessible in this scope

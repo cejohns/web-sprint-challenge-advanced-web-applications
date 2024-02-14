@@ -37,30 +37,40 @@ export default function ArticleForm(props) {
 
   const onSubmit = async evt => {
     evt.preventDefault();
-    setIsLoading(true); // Enable loading state
-    const formErrors = validateForm();
+    setIsLoading(true);
+    const formErrors = validateForm(values); // Ensure 'values' are correctly passed if needed
+  
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors);
-      setIsLoading(false); // Disable loading state if validation fails
+      setIsLoading(false);
       return;
     }
-    
+  
     try {
       if (currentArticle) {
         await updateArticle({ article_id: currentArticle.article_id, article: values });
       } else {
         await postArticle(values);
       }
-      setCurrentArticleId(); 
-      setSuccessMessage("Article successfully submitted!");
-      setValues(initialFormValues); // Reset form values after submission
-      setTimeout(() => setSuccessMessage(''), 3000); // Clear success message after 3 seconds
+  
+      clearFormAndShowSuccess(); // A function to handle successful form submission
     } catch (error) {
-      setErrors({...errors, submit: error.message}); // Handle potential server-side errors
+      console.error(error); // Consider logging the error for debugging
+      setErrors({ submit: "There was a problem submitting your article. Please try again." });
     } finally {
-      setIsLoading(false); // Disable loading state
+      setIsLoading(false);
     }
   };
+  
+  const clearFormAndShowSuccess = () => {
+    setCurrentArticleId(); // Assuming this resets the context for the current article
+    setSuccessMessage("Article successfully submitted!");
+    setValues(initialFormValues);
+    setErrors({}); // Clear all errors
+    setTimeout(() => setSuccessMessage(''), 3000);
+  };
+  
+  
 
   const isDisabled = () => {
     return !values.title.trim() || !values.text.trim() || !values.topic || isLoading;
