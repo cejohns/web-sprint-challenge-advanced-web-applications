@@ -90,7 +90,7 @@ const postArticle = async (article) => {
   try {
     const response = await axiosWithAuth().post(articlesUrl, article);
     setArticles(prevArticles => [...prevArticles, response.data.article]);
-     setMessage(`Well done, ${username}, Great article!`);
+     setMessage(`Well done, ${username}. Great article!`);
      // setArticles(initialFormValues);
     //setArticleForm({ title: '', content: '' });
   } catch (error) {
@@ -108,19 +108,21 @@ const postArticle = async (article) => {
 const updateArticle = async ({ article_id, article }) => {
   setMessage('');
   setSpinnerOn(true);
-  const username = localStorage.getItem('username');
+  const username = localStorage.getItem('username') || 'User';
   try {
     const response = await axiosWithAuth().put(`${articlesUrl}/${article_id}`, article);
     //console.log(response.data);
     console.log("Before update:", articles);
+    const updatedArticleData = response.data.article || response.data;
     const updatedArticles = articles.map(art =>
-      art.article_id === article_id ? { ...art, ...response.data } : art
+      art.article_id === article_id ? { ...art, ...updatedArticleData } : art
     );
     console.log("After update:", updatedArticles);
     console.log(updatedArticles);
     setArticles(updatedArticles);
     // Make sure the variable `username` is defined and accessible in this scope
     setMessage(`Nice update, ${username}!`);
+    setCurrentArticleId(null);
   } catch (error) {
     setMessage(`Error updating article: ${error.message}`);
   } finally {
@@ -140,7 +142,7 @@ const updateArticle = async ({ article_id, article }) => {
     try {
       await axiosWithAuth().delete(`${articlesUrl}/${article_id}`);
       setArticles(prevArticles => prevArticles.filter(article => article.article_id !== article_id));
-      setMessage(`Article ${article_id} was deleted,${username}!!`); // Corrected line
+      setMessage(`Article ${article_id} was deleted, ${username}!`); // Corrected line
     } catch (error) {
       setMessage(`Failed to delete article: ${error.message}`);
     } finally {
