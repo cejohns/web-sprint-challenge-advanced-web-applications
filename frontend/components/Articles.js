@@ -15,36 +15,33 @@ export default function Articles({ articles, getArticles, deleteArticle, setCurr
 
   return (
     <div className="articles">
-      <h2>Articles</h2>
-      {
-        articles.length === 0
-          ? 'No articles yet'
-          : articles.filter(art => art != null && art.article_id != null)
-          // Remove any nullish articles
-              .map(art => {
-                return (
-                  <div className="article" key={art?.article_id}>
-                    <div>
-                      <h3>{art?.title}</h3>
-                      <p>{art?.text}</p>
-                      <p>Topic: {art?.topic}</p>
-                    </div>
-                    <div>
-                      <button 
-                        onClick={() => setCurrentArticleId(art.article_id)}
-                        disabled={currentArticleId === art.article_id} // Disable if this is the current article being edited
-                      >
-                        Edit
-                      </button>
-                      <button onClick={() => deleteArticle(art.article_id)}>
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                )
-              })
-      }
-    </div>
+    <h2>Articles</h2>
+    {
+      Array.isArray(articles) && articles.length === 0
+        ? 'No articles yet'
+        : Array.isArray(articles) && articles.filter(art => art != null && art.article_id != null)
+            .map(art => (
+              <div className="article" key={art.article_id}>
+                <div>
+                  <h3>{art.title}</h3>
+                  <p>{art.text}</p>
+                  <p>Topic: {art.topic}</p>
+                </div>
+                <div>
+                  <button 
+                    onClick={() => setCurrentArticleId(art.article_id)}
+                    disabled={currentArticleId === art.article_id}
+                  >
+                    Edit
+                  </button>
+                  <button onClick={() => deleteArticle(art.article_id)}>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))
+    }
+  </div>
   );
 }
 

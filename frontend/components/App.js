@@ -14,13 +14,13 @@ const articlesUrl = 'http://localhost:9000/api/articles'
 const loginUrl = 'http://localhost:9000/api/login'
 
 
-const initialFormValues = { title: '', text: '', topic: '' };
+//const initialFormValues = { title: '', text: '', topic: '' };
 
 export default function App() {
   // ✨ MVP can be achieved with these states
   const [message, setMessage] = useState('')
   const [articles, setArticles] = useState([])
- // const [articleForm, setArticleForm] = useState({ title: '', content: '' }); // State for the article form inputs
+  //const [articleForm, setArticleForm] = useState({ title: '', content: '' }); // State for the article form inputs
   const [currentArticleId, setCurrentArticleId] = useState()
   const [spinnerOn, setSpinnerOn] = useState(false)
   const [username, setUsername] = useState('');
@@ -89,11 +89,9 @@ const postArticle = async (article) => {
   setSpinnerOn(true);
   try {
     const response = await axiosWithAuth().post(articlesUrl, article);
-    setArticles(prevArticles => {return prevArticles.concat(response.data.article)});
-    setArticles(initialFormValues); // Make sure initialFormValues is defined as your form's initial state.
-    // Use the `username` state variable directly
-    setMessage(`Well done, ${username}, Great article!`);
-    // Reset the article form upon successful submission
+    setArticles(prevArticles => [...prevArticles, response.data.article]);
+     setMessage(`Well done, ${username}, Great article!`);
+     // setArticles(initialFormValues);
     //setArticleForm({ title: '', content: '' });
   } catch (error) {
     setMessage('Failed to post article: ' + error.message);
@@ -113,7 +111,13 @@ const updateArticle = async ({ article_id, article }) => {
   const username = localStorage.getItem('username');
   try {
     const response = await axiosWithAuth().put(`${articlesUrl}/${article_id}`, article);
-    const updatedArticles = articles.map(art => art.article_id === article_id ? response.data.updatedArticle : art);
+    //console.log(response.data);
+    console.log("Before update:", articles);
+    const updatedArticles = articles.map(art =>
+      art.article_id === article_id ? { ...art, ...response.data } : art
+    );
+    console.log("After update:", updatedArticles);
+    console.log(updatedArticles);
     setArticles(updatedArticles);
     // Make sure the variable `username` is defined and accessible in this scope
     setMessage(`Nice update, ${username}!`);
@@ -136,7 +140,7 @@ const updateArticle = async ({ article_id, article }) => {
     try {
       await axiosWithAuth().delete(`${articlesUrl}/${article_id}`);
       setArticles(prevArticles => prevArticles.filter(article => article.article_id !== article_id));
-      setMessage(`Article ${article_id} was deleted, Foo!!`); // Corrected line
+      setMessage(`Article ${article_id} was deleted,${username}!!`); // Corrected line
     } catch (error) {
       setMessage(`Failed to delete article: ${error.message}`);
     } finally {
@@ -145,41 +149,42 @@ const updateArticle = async ({ article_id, article }) => {
   };
   
   
-  
+  console.log(articles, currentArticleId);
   const currentArticle = currentArticleId != null ? articles.find(article => article.article_id === currentArticleId) : null;
   return (
     // ✨ fix the JSX: `Spinner`, `Message`, `LoginForm`, `ArticleForm` and `Articles` expect props ❗
     <>
-    <Spinner on={spinnerOn} />
-    <Message message={message} />
-    <button id="logout" onClick={logout}>Logout from app</button>
-    <div id="wrapper" style={{ opacity: spinnerOn ? "0.25" : "1" }}>
-      <h1>Advanced Web Applications</h1>
-      <nav>
-        <NavLink id="loginScreen" to="/">Login</NavLink>
-        <NavLink id="articlesScreen" to="/articles">Articles</NavLink>
-      </nav>
-      <Routes>
-        <Route path="/" element={<LoginForm login={login} />} />
-        <Route path="/articles" element={
-          <>
-            <ArticleForm 
-              postArticle={postArticle} 
-              updateArticle={updateArticle}
-              setCurrentArticleId={setCurrentArticleId}
-              currentArticle={currentArticle} // Pass the found currentArticle
-            />
-            <Articles 
-              articles={articles} 
-              getArticles={getArticles}
-              deleteArticle={deleteArticle}
-              setCurrentArticleId={setCurrentArticleId}
-            />
-          </>
-        } />
-      </Routes>
-      <footer>Bloom Institute of Technology 2022</footer>
-    </div>
-  </>
+      <Spinner on={spinnerOn} />
+      <Message message={message} />
+      <button id="logout" onClick={logout}>Logout from app</button>
+      <div id="wrapper" style={{ opacity: spinnerOn ? "0.25" : "1" }}>
+        <h1>Advanced Web Applications</h1>
+        <nav>
+          <NavLink id="loginScreen" to="/">Login</NavLink>
+          <NavLink id="articlesScreen" to="/articles">Articles</NavLink>
+        </nav>
+        <Routes>
+          <Route path="/" element={<LoginForm login={login} />} />
+          <Route path="/articles" element={
+            <>
+              <ArticleForm 
+                postArticle={postArticle} 
+                updateArticle={updateArticle}
+                setCurrentArticleId={setCurrentArticleId}
+                currentArticle={currentArticle} // Now correctly passing currentArticle
+               // setArticleForm={setArticleForm} // Added prop to set form state
+              />
+              <Articles 
+                articles={articles} 
+                getArticles={getArticles}
+                deleteArticle={deleteArticle}
+                setCurrentArticleId={setCurrentArticleId}
+              />
+            </>
+          } />
+        </Routes>
+        <footer>Bloom Institute of Technology 2022</footer>
+      </div>
+    </>
   )
 }

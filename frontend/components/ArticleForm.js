@@ -23,8 +23,8 @@ export default function ArticleForm(props) {
   }, [currentArticle]);
 
   const onChange = evt => {
-    const { id, value } = evt.target;
-    setValues({ ...values, [id]: value });
+    const { name, value } = evt.target; // Use name instead of id
+    setValues({ ...values, [name]: value });
   };
 
   const validateForm = () => {
