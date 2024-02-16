@@ -108,7 +108,7 @@ const postArticle = async (article) => {
 const updateArticle = async ({ article_id, article }) => {
   setMessage('');
   setSpinnerOn(true);
-  const username = localStorage.getItem('username') || 'User';
+  //const username = localStorage.getItem('username') || 'User';
   try {
     const response = await axiosWithAuth().put(`${articlesUrl}/${article_id}`, article);
     //console.log(response.data);
