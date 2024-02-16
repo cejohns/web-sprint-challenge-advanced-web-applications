@@ -47,16 +47,16 @@ const redirectToArticles = () => navigate("/Articles");
       // Set a personalized welcome message that includes the user's name
       const welcomeMessage = `Welcome back, ${username}!`; // Adjusted to include username
       setMessage(welcomeMessage);
-      
+      setSpinnerOn(false); 
       // Assuming this function sets the expected success message for articles fetching
       // or navigates the user to a page where this message is displayed.
       redirectToArticles();
     } catch (error) {
       // If login fails, display an error message to the user
       setMessage('Login failed: ' + error.message);
-    } finally {
+    } /*finally {
       setSpinnerOn(false); // Hide the spinner or loading indicator
-    }
+    }*/
   };
   
   
